@@ -3,15 +3,10 @@ import express, { json } from "express";
 import mongoose, { connect } from "mongoose";
 import cors from "cors";
 import passport from "passport";
-import "./config/passport.js";
+import "./configs/passport.js";
 import http from "http";
-import { Server } from "socket.io";
 import authRoutes from "./routes/auth.js";
-import uploadImagesRoutes from "./routes/upload-image.js";
-import userRoutes from "./routes/user-api.js";
-import patientVerificationRoutes from "./routes/verification-api.js";
-import fetchDataRoutes from "./routes/fetch-data.js";
-import adminRoutes from "./routes/admin.js";
+import chatRoutes from "./routes/chat.js";
 
 const PORT = process.env.PORT;
 const app = express();
@@ -29,7 +24,6 @@ app.use(
 app.use(passport.initialize());
 
 const server = http.createServer(app);
-initSocket(server);
 
 connect(process.env.MONGO_URI)
   .then(() =>
@@ -42,9 +36,4 @@ server.listen(PORT, "0.0.0.0", () => {
 });
 
 app.use("/api/auth", authRoutes);
-app.use("/api/upload-image", uploadImagesRoutes);
-// app.use("/api/chat", chatRoutes);
-app.use("/api/user-api", userRoutes);
-app.use("/api/verification-api", patientVerificationRoutes);
-app.use("/api/fetch-data", fetchDataRoutes);
-app.use("/api/admin", adminRoutes);
+app.use("/api/chat/", chatRoutes);
