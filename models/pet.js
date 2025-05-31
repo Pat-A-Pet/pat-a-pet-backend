@@ -28,7 +28,7 @@ const petSchema = new mongoose.Schema(
     },
     adopted: { type: Boolean, default: false },
     status: { type: String, default: "available" },
-    likes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    loves: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     adoptionFee: { type: Number, required: true },
   },
   {

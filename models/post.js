@@ -32,7 +32,7 @@ const postSchema = new mongoose.Schema(
       },
     },
     videoUrls: [String],
-    likes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    loves: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     comments: [commentSchema],
   },
   {

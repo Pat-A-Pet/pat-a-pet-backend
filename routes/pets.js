@@ -34,6 +34,24 @@ router.get("/get-listings", async (req, res) => {
   }
 });
 
+router.get("/categories", async (req, res) => {
+  try {
+    const categories = await Pet.distinct("species");
+    res.json(categories);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.get("/get-loved-pets/:userId", async (req, res) => {
+  try {
+    const pets = await Pet.find({ loves: req.params.userId });
+    res.json(pets);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Get pet by ID
 router.get("/get-listing/:id", async (req, res) => {
   try {

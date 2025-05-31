@@ -49,6 +49,32 @@ router.get("/get-posts/:id", async (req, res) => {
   }
 });
 
+router.get("/get-loved-posts/:userId", async (req, res) => {
+  try {
+    const posts = await Post.find({ loves: req.params.userId })
+      .populate("author", "fullname profilePictureUrl")
+      .populate("comments.author", "fullname profilePictureUrl")
+      .sort({ createdAt: -1 });
+
+    res.json(posts);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.get("/get-my-posts/:userId", async (req, res) => {
+  try {
+    const posts = await Post.find({ author: req.params.userId })
+      .populate("author", "fullname profilePictureUrl")
+      .populate("comments.author", "fullname profilePictureUrl")
+      .sort({ createdAt: -1 });
+
+    res.json(posts);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Update post (only author can update)
 router.put(
   "/update-post/:id",
