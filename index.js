@@ -7,6 +7,8 @@ import "./configs/passport.js";
 import http from "http";
 import authRoutes from "./routes/auth.js";
 import chatRoutes from "./routes/chat.js";
+import petsRoutes from "./routes/pets.js";
+import postsRoutes from "./routes/posts.js";
 
 const PORT = process.env.PORT;
 const app = express();
@@ -37,3 +39,5 @@ server.listen(PORT, "0.0.0.0", () => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/chat/", chatRoutes);
+app.use("/api/pets/", petsRoutes);
+app.use("/api/posts/", postsRoutes);
