@@ -7,7 +7,7 @@ const commentSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
-    content: { type: String, required: true },
+    comment: { type: String, required: true },
   },
   {
     timestamps: true,
@@ -16,14 +16,22 @@ const commentSchema = new mongoose.Schema(
 
 const postSchema = new mongoose.Schema(
   {
-    // title: { type: String, required: true },
     captions: { type: String, required: true },
     author: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
-    imageUrls: [String],
+    imageUrls: {
+      type: [String],
+      validate: {
+        validator: function (v) {
+          return v.length > 0 || this.videoUrls.length > 0;
+        },
+        message: "A post must have at least one image or video.",
+      },
+    },
+    videoUrls: [String],
     likes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     comments: [commentSchema],
   },

@@ -29,6 +29,15 @@ const UserSchema = new mongoose.Schema(
       default: "",
       ref: "ProfilePicture",
     },
+    phoneNumber: {
+      type: String,
+      validate: {
+        validator: function (value) {
+          return /^\+?[0-9]{7,15}$/.test(value);
+        },
+        message: "Please use a valid phone number",
+      },
+    },
   },
   {
     timestamps: true,
