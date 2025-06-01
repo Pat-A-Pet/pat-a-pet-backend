@@ -5,7 +5,12 @@ const petSchema = new mongoose.Schema(
     name: { type: String, required: true },
     species: { type: String, required: true },
     breed: { type: String, required: true },
-    age: { type: Number, required: true },
+    age: {
+      type: Number,
+      required: function () {
+        return !this.birthDate; // Only required if birthDate is not provided
+      },
+    },
     birthDate: { type: Date },
     gender: { type: String, required: true },
     color: { type: String, required: true },
@@ -18,15 +23,17 @@ const petSchema = new mongoose.Schema(
     favoriteActivities: [String],
     description: { type: String, required: true },
     imageUrls: { type: [String], required: true },
-    videoUrls: [String],
-    profileImageUrl: { type: String, required: true },
+    // videoUrls: [String],
     location: { type: String, required: true },
     owner: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
-    adopted: { type: Boolean, default: false },
+    adoptedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
     status: { type: String, default: "available" },
     loves: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     adoptionFee: { type: Number, required: true },
