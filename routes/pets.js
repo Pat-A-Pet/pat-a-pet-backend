@@ -148,6 +148,20 @@ router.get("/get-listing/:id", async (req, res) => {
   }
 });
 
+// Get user's adoption posts
+router.get('/my-adoptions/:userId', async (req, res) => {
+  try {
+    const pets = await Pet.find({ owner: req.params.userId })
+      .populate('owner', 'fullname email')
+      .sort({ createdAt: -1 });
+
+    res.json(pets);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
 // Update pet (only owner can update)
 router.put(
   "/update-listing/:id",
