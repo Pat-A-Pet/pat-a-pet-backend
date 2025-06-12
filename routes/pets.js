@@ -109,7 +109,9 @@ router.get("/get-listings", async (req, res) => {
     if (req.query.species) filters.species = req.query.species;
     if (req.query.owner) filters.owner = req.query.owner;
 
-    const pets = await Pet.find(filters).populate("owner", "fullname email");
+    const pets = await Pet.find(filters)
+      .populate("owner", "fullname email")
+      .sort({ createdAt: -1 });
     res.json(pets);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -149,10 +151,10 @@ router.get("/get-listing/:id", async (req, res) => {
 });
 
 // Get user's adoption posts
-router.get('/my-adoptions/:userId', async (req, res) => {
+router.get("/my-adoptions/:userId", async (req, res) => {
   try {
     const pets = await Pet.find({ owner: req.params.userId })
-      .populate('owner', 'fullname email')
+      .populate("owner", "fullname email")
       .sort({ createdAt: -1 });
 
     res.json(pets);
@@ -160,7 +162,6 @@ router.get('/my-adoptions/:userId', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-
 
 // Update pet (only owner can update)
 router.put(
@@ -195,7 +196,7 @@ router.delete(
       if (!pet.owner.equals(req.user._id))
         return res.status(403).json({ error: "Not authorized" });
 
-      await pet.remove();
+      await pet.deleteOne();
       res.json({ message: "Pet deleted successfully" });
     } catch (err) {
       res.status(500).json({ error: err.message });
