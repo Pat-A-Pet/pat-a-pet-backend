@@ -7,23 +7,18 @@ const petSchema = new mongoose.Schema(
     breed: { type: String, required: true },
     age: {
       type: Number,
-      required: function () {
-        return !this.birthDate; // Only required if birthDate is not provided
-      },
+      required: true,
     },
-    birthDate: { type: Date },
     gender: { type: String, required: true },
     color: { type: String, required: true },
     weight: { type: String, required: true },
     vaccinated: { type: Boolean, required: true },
     neutered: { type: Boolean, required: true },
     microchipped: { type: Boolean, required: true },
-    medicalConditions: { type: String },
-    specialNeeds: { type: String },
-    favoriteActivities: [String],
+    medicalConditions: { type: String, required: true },
+    specialNeeds: { type: String, required: true },
     description: { type: String, required: true },
     imageUrls: { type: [String], required: true },
-    // videoUrls: [String],
     location: { type: String, required: true },
     owner: {
       type: mongoose.Schema.Types.ObjectId,

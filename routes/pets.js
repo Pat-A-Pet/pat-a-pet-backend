@@ -5,11 +5,10 @@ import multer from "multer";
 import cloudinary from "../configs/cloudinary.js";
 
 const router = Router();
-const storage = multer.memoryStorage();
 const upload = multer({
-  storage: storage,
+  storage: multer.memoryStorage(),
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB limit
+    fileSize: 5 * 1024 * 1024, // 5MB limit
   },
   fileFilter: (req, file, cb) => {
     if (file.mimetype.startsWith("image/")) {
@@ -127,42 +126,6 @@ router.get("/categories", async (req, res) => {
   }
 });
 
-router.get("/get-loved-pets/:userId", async (req, res) => {
-  try {
-    const pets = await Pet.find({ loves: req.params.userId });
-    res.json(pets);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Get pet by ID
-router.get("/get-listing/:id", async (req, res) => {
-  try {
-    const pet = await Pet.findById(req.params.id).populate(
-      "owner",
-      "fullname email",
-    );
-    if (!pet) return res.status(404).json({ error: "Pet not found" });
-    res.json(pet);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Get user's adoption posts
-router.get("/my-adoptions/:userId", async (req, res) => {
-  try {
-    const pets = await Pet.find({ owner: req.params.userId })
-      .populate("owner", "fullname email")
-      .sort({ createdAt: -1 });
-
-    res.json(pets);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
 // Update pet (only owner can update)
 router.put(
   "/update-listing/:id",
@@ -203,5 +166,31 @@ router.delete(
     }
   },
 );
+
+router.get(
+  "/get-loved-pets/:userId",
+  passport.authenticate("jwt", { session: false }),
+  async (req, res) => {
+    try {
+      const pets = await Pet.find({ loves: req.params.userId });
+      res.json(pets);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  },
+);
+
+// Get user's adoption posts
+router.get("/my-adoptions/:userId", async (req, res) => {
+  try {
+    const pets = await Pet.find({ owner: req.params.userId })
+      .populate("owner", "fullname email")
+      .sort({ createdAt: -1 });
+
+    res.json(pets);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 export default router;

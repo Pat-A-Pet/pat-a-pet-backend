@@ -1,22 +1,59 @@
 import { Router } from "express";
 import passport from "passport";
 import Post from "../models/post.js";
+import multer from "multer";
+import cloudinary from "../configs/cloudinary.js";
 
 const router = Router();
-
+const upload = multer({
+  storage: multer.memoryStorage(), // Use memory for consistency with pet listings
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit (adjust as needed)
+  },
+  fileFilter: (req, file, cb) => {
+    // Allow only common image MIME types
+    const allowedMimes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+    if (allowedMimes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error("Only JPEG, PNG, WebP, or GIF images are allowed"), false);
+    }
+  },
+});
 // Create a new post
 router.post(
   "/create-post",
   passport.authenticate("jwt", { session: false }),
+  upload.array("images"),
   async (req, res) => {
     try {
+      // Upload files to Cloudinary
+      const uploadPromises =
+        req.files?.map((file) => {
+          return cloudinary.uploader.upload(file.path, {
+            folder: "pat-a-pet", // Optional folder in Cloudinary
+          });
+        }) || [];
+
+      const cloudinaryResults = await Promise.all(uploadPromises);
+
+      // Get secure URLs from Cloudinary
+      const imageUrls = cloudinaryResults.map((result) => result.secure_url);
+
+      // Create post with Cloudinary URLs
       const post = new Post({
-        ...req.body,
+        captions: req.body.captions,
         author: req.user._id,
+        imageUrls: imageUrls,
       });
+
       await post.save();
+
+      // Clean up temporary files
+
       res.status(201).json(post);
     } catch (err) {
+      // Clean up on error
       res.status(400).json({ error: err.message });
     }
   },
@@ -35,63 +72,36 @@ router.get("/get-posts", async (req, res) => {
   }
 });
 
-// Get post by ID
-router.get("/get-posts/:id", async (req, res) => {
-  try {
-    const post = await Post.findById(req.params.id)
-      .populate("author", "fullname profilePictureUrl")
-      .populate("comments.author", "fullname profilePictureUrl");
-
-    if (!post) return res.status(404).json({ error: "Post not found" });
-    res.json(post);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-router.get("/get-loved-posts/:userId", async (req, res) => {
-  try {
-    const posts = await Post.find({ loves: req.params.userId })
-      .populate("author", "fullname profilePictureUrl")
-      .populate("comments.author", "fullname profilePictureUrl")
-      .sort({ createdAt: -1 });
-
-    res.json(posts);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-router.get("/get-my-posts/:userId", async (req, res) => {
-  try {
-    const posts = await Post.find({ author: req.params.userId })
-      .populate("author", "fullname profilePictureUrl")
-      .populate("comments.author", "fullname profilePictureUrl")
-      .sort({ createdAt: -1 });
-
-    res.json(posts);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Update post (only author can update)
-router.put(
-  "/update-post/:id",
+router.get(
+  "/get-loved-posts/:userId",
   passport.authenticate("jwt", { session: false }),
   async (req, res) => {
     try {
-      const post = await Post.findById(req.params.id);
-      if (!post) return res.status(404).json({ error: "Post not found" });
+      const posts = await Post.find({ loves: req.params.userId })
+        .populate("author", "fullname profilePictureUrl")
+        .populate("comments.author", "fullname profilePictureUrl")
+        .sort({ createdAt: -1 });
 
-      if (!post.author.equals(req.user._id))
-        return res.status(403).json({ error: "Not authorized" });
-
-      Object.assign(post, req.body);
-      await post.save();
-      res.json(post);
+      res.json(posts);
     } catch (err) {
-      res.status(400).json({ error: err.message });
+      res.status(500).json({ error: err.message });
+    }
+  },
+);
+
+router.get(
+  "/get-my-posts/:userId",
+  passport.authenticate("jwt", { session: false }),
+  async (req, res) => {
+    try {
+      const posts = await Post.find({ author: req.params.userId })
+        .populate("author", "fullname profilePictureUrl")
+        .populate("comments.author", "fullname profilePictureUrl")
+        .sort({ createdAt: -1 });
+
+      res.json(posts);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
     }
   },
 );
@@ -108,7 +118,7 @@ router.delete(
       if (!post.author.equals(req.user._id))
         return res.status(403).json({ error: "Not authorized" });
 
-      await post.remove();
+      await post.deleteOne();
       res.json({ message: "Post deleted successfully" });
     } catch (err) {
       res.status(500).json({ error: err.message });

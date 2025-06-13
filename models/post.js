@@ -31,7 +31,6 @@ const postSchema = new mongoose.Schema(
         message: "A post must have at least one image or video.",
       },
     },
-    videoUrls: [String],
     loves: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     comments: [commentSchema],
   },
