@@ -6,20 +6,19 @@ import cloudinary from "../configs/cloudinary.js";
 
 const router = Router();
 const upload = multer({
-  storage: multer.memoryStorage(), // Use memory for consistency with pet listings
+  storage: multer.memoryStorage(),
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB limit (adjust as needed)
+    fileSize: 10 * 1024 * 1024, // 10MB limit
   },
   fileFilter: (req, file, cb) => {
-    // Allow only common image MIME types
-    const allowedMimes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
-    if (allowedMimes.includes(file.mimetype)) {
+    if (file.mimetype.startsWith("image/")) {
       cb(null, true);
     } else {
-      cb(new Error("Only JPEG, PNG, WebP, or GIF images are allowed"), false);
+      cb(new Error("Only image files are allowed"), false);
     }
   },
 });
+
 // Create a new post
 router.post(
   "/create-post",
@@ -27,13 +26,31 @@ router.post(
   upload.array("images"),
   async (req, res) => {
     try {
-      // Upload files to Cloudinary
-      const uploadPromises =
-        req.files?.map((file) => {
-          return cloudinary.uploader.upload(file.path, {
-            folder: "pat-a-pet", // Optional folder in Cloudinary
-          });
-        }) || [];
+      // Check if files exist
+      if (!req.files || req.files.length === 0) {
+        return res.status(400).json({ error: "No files uploaded" });
+      }
+
+      // Upload files to Cloudinary using buffer (not file.path)
+      const uploadPromises = req.files.map((file) => {
+        return new Promise((resolve, reject) => {
+          cloudinary.uploader
+            .upload_stream(
+              {
+                folder: "pat-a-pet",
+                resource_type: "image",
+              },
+              (error, result) => {
+                if (error) {
+                  reject(error);
+                } else {
+                  resolve(result);
+                }
+              },
+            )
+            .end(file.buffer); // Use file.buffer instead of file.path
+        });
+      });
 
       const cloudinaryResults = await Promise.all(uploadPromises);
 
@@ -49,11 +66,9 @@ router.post(
 
       await post.save();
 
-      // Clean up temporary files
-
       res.status(201).json(post);
     } catch (err) {
-      // Clean up on error
+      console.error("Error creating post:", err);
       res.status(400).json({ error: err.message });
     }
   },
@@ -128,7 +143,7 @@ router.delete(
 
 // Add comment to post
 router.post(
-  "/update-post/:id/comments",
+  "/post-comments/:id",
   passport.authenticate("jwt", { session: false }),
   async (req, res) => {
     try {
@@ -153,9 +168,8 @@ router.post(
   },
 );
 
-// Like or Unlike a post
 router.post(
-  "/update-post/:id/like",
+  "/post-love/:id",
   passport.authenticate("jwt", { session: false }),
   async (req, res) => {
     try {
@@ -163,12 +177,12 @@ router.post(
       if (!post) return res.status(404).json({ error: "Post not found" });
 
       const userId = req.user._id;
-      const index = post.likes.findIndex((id) => id.equals(userId));
+      const index = post.loves.indexOf(userId);
 
       if (index === -1) {
-        post.likes.push(userId); // Like
+        post.loves.push(userId); // Like
       } else {
-        post.likes.splice(index, 1); // Unlike
+        post.loves.splice(index, 1); // Unlike
       }
 
       await post.save();

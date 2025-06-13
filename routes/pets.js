@@ -167,6 +167,36 @@ router.delete(
   },
 );
 
+// Add to existing routes or create new file
+router.patch(
+  "/pet-love/:id",
+  passport.authenticate("jwt", { session: false }),
+  async (req, res) => {
+    try {
+      const pet = await Pet.findById(req.params.id);
+      if (!pet) {
+        return res.status(404).json({ message: "Pet not found" });
+      }
+
+      const userId = req.user._id;
+      const loveIndex = pet.loves.indexOf(userId);
+
+      if (loveIndex === -1) {
+        // Add love
+        pet.loves.push(userId);
+      } else {
+        // Remove love
+        pet.loves.splice(loveIndex, 1);
+      }
+
+      await pet.save();
+      res.json({ loves: pet.loves });
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  },
+);
+
 router.get(
   "/get-loved-pets/:userId",
   passport.authenticate("jwt", { session: false }),
