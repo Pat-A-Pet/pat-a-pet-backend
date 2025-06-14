@@ -210,6 +210,20 @@ router.get(
   },
 );
 
+// Get pet by ID
+router.get("/get-listing/:id", async (req, res) => {
+  try {
+    const pet = await Pet.findById(req.params.id).populate(
+      "owner",
+      "fullname email",
+    );
+    if (!pet) return res.status(404).json({ error: "Pet not found" });
+    res.json(pet);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Get user's adoption posts
 router.get("/my-adoptions/:userId", async (req, res) => {
   try {
