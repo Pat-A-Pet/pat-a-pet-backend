@@ -38,6 +38,13 @@ const UserSchema = new mongoose.Schema(
         message: "Please use a valid phone number",
       },
     },
+    adoptions: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Pet",
+        default: [],
+      },
+    ],
   },
   {
     timestamps: true,

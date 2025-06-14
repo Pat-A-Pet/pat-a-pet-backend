@@ -32,6 +32,25 @@ const petSchema = new mongoose.Schema(
     status: { type: String, default: "available" },
     loves: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     adoptionFee: { type: Number, required: true },
+    adoptionRequests: [
+      {
+        user: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+          required: true,
+        },
+        // channelId: String,
+        status: {
+          type: String,
+          enum: ["pending", "accepted", "rejected"],
+          default: "pending",
+        },
+        createdAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
   },
   {
     timestamps: true,

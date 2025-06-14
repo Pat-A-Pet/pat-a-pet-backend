@@ -158,34 +158,79 @@ router.post(
       post.comments.push(comment);
       await post.save();
 
-      // Optionally populate author in the response
-      await post.populate("comments.author", "fullname profilePictureUrl");
+      // Repopulate the full post to get fresh data
+      const updatedPost = await Post.findById(post._id)
+        .populate("author", "fullname profilePictureUrl")
+        .populate("comments.author", "fullname profilePictureUrl");
 
-      res.status(201).json(post);
+      // Ensure we're sending proper JSON
+      res.status(201).json(updatedPost.toObject()); // Add .toObject() for Mongoose documents
     } catch (err) {
       res.status(400).json({ error: err.message });
     }
   },
 );
 
-router.post(
+router.patch(
   "/post-love/:id",
   passport.authenticate("jwt", { session: false }),
   async (req, res) => {
     try {
-      const post = await Post.findById(req.params.id);
+      let post = await Post.findById(req.params.id);
       if (!post) return res.status(404).json({ error: "Post not found" });
 
       const userId = req.user._id;
       const index = post.loves.indexOf(userId);
 
       if (index === -1) {
-        post.loves.push(userId); // Like
+        post.loves.push(userId);
       } else {
-        post.loves.splice(index, 1); // Unlike
+        post.loves.splice(index, 1);
       }
 
       await post.save();
+
+      // Repopulate the author before sending response
+      post = await Post.findById(post._id)
+        .populate("author", "fullname profilePictureUrl")
+        .populate("comments.author", "fullname profilePictureUrl");
+
+      res.json(post.toObject());
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  },
+);
+
+// Get post by ID
+router.get(
+  "/get-posts/:id",
+  passport.authenticate("jwt", { session: false }),
+  async (req, res) => {
+    try {
+      const post = await Post.findById(req.params.id)
+        .populate("author", "fullname profilePictureUrl")
+        .populate("comments.author", "fullname profilePictureUrl");
+
+      if (!post) return res.status(404).json({ error: "Post not found" });
+      res.json(post);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  },
+);
+
+// Get post by ID
+router.get(
+  "/get-posts/:id",
+  passport.authenticate("jwt", { session: false }),
+  async (req, res) => {
+    try {
+      const post = await Post.findById(req.params.id)
+        .populate("author", "fullname profilePictureUrl")
+        .populate("comments.author", "fullname profilePictureUrl");
+
+      if (!post) return res.status(404).json({ error: "Post not found" });
       res.json(post);
     } catch (err) {
       res.status(500).json({ error: err.message });

@@ -1,6 +1,7 @@
 import { Router } from "express";
 import passport from "passport";
 import Pet from "../models/pet.js";
+import User from "../models/user.js";
 import multer from "multer";
 import cloudinary from "../configs/cloudinary.js";
 
@@ -225,16 +226,83 @@ router.get("/get-listing/:id", async (req, res) => {
 });
 
 // Get user's adoption posts
-router.get("/my-adoptions/:userId", async (req, res) => {
-  try {
-    const pets = await Pet.find({ owner: req.params.userId })
-      .populate("owner", "fullname email")
-      .sort({ createdAt: -1 });
+router.get(
+  "/get-my-adoptions/:userId",
+  passport.authenticate("jwt", { session: false }),
+  async (req, res) => {
+    try {
+      const user = await User.findById(req.params.userId)
+        .populate("adoptions")
+        .exec();
 
-    res.json(pets);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      res.json(user.adoptions);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  },
+);
+
+router.post(
+  "/request-adoption/:petId",
+  passport.authenticate("jwt", { session: false }),
+  async (req, res) => {
+    try {
+      const pet = await Pet.findById(req.params.petId);
+      if (!pet) return res.status(404).json({ message: "Pet not found" });
+
+      // Check if pet is available
+      if (pet.status !== "available") {
+        return res
+          .status(400)
+          .json({ message: "Pet is not available for adoption" });
+      }
+
+      // Check if user already requested
+      const existingRequest = pet.adoptionRequests.find(
+        (req) => req.user.toString() === req.body.userId,
+      );
+
+      if (existingRequest) {
+        return res
+          .status(400)
+          .json({ message: "You already requested to adopt this pet" });
+      }
+
+      // Add new request
+      pet.adoptionRequests.push({
+        user: req.body.userId,
+        status: "pending",
+      });
+
+      await pet.save();
+      res.status(201).json(pet);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  },
+);
+
+router.get(
+  "/get-adoption-requests/:petId",
+  passport.authenticate("jwt", { session: false }),
+  async (req, res) => {
+    try {
+      const pet = await Pet.findById(req.params.petId).populate(
+        "adoptionRequests.user",
+        "fullname profilePictureUrl",
+      );
+
+      if (!pet) return res.status(404).json({ message: "Pet not found" });
+
+      res.json(pet.adoptionRequests);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  },
+);
 
 export default router;
