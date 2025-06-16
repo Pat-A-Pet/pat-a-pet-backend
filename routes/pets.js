@@ -215,20 +215,51 @@ router.get(
 );
 
 // Get pet by ID
+// router.get("/get-listing/:id", async (req, res) => {
+//   try {
+//     const pet = await Pet.findById(req.params.id).populate(
+//       "owner",
+//       "fullname email",
+//     );
+//     if (!pet) return res.status(404).json({ error: "Pet not found" });
+
+//     const populatedPet = await Pet.findById(pet._id)
+//       .populate("adoptedBy", "fullname profilePictureUrl")
+//       .populate("adoptionRequests.user", "fullname profilePictureUrl");
+//     res.json({
+//       pet: populatedPet,
+//     });
+//   } catch (err) {
+//     res.status(500).json({ error: err.message });
+//   }
+// });
+
+// Get pet by ID (Jangan dihapus bang XD)
 router.get("/get-listing/:id", async (req, res) => {
   try {
-    const pet = await Pet.findById(req.params.id).populate(
-      "owner",
-      "fullname email",
-    );
-    if (!pet) return res.status(404).json({ error: "Pet not found" });
-
-    const populatedPet = await Pet.findById(pet._id)
+    const pet = await Pet.findById(req.params.id)
+      .populate("owner", "fullname email")
       .populate("adoptedBy", "fullname profilePictureUrl")
       .populate("adoptionRequests.user", "fullname profilePictureUrl");
+    
+    if (!pet) return res.status(404).json({ error: "Pet not found" });
+
     res.json({
-      pet: populatedPet,
+      pet: pet,
     });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get user's adoption posts (jangan dihapus juga bang XD)
+router.get('/my-adoptions/:userId', async (req, res) => {
+  try {
+    const pets = await Pet.find({ owner: req.params.userId })
+      .populate('owner', 'fullname email')
+      .sort({ createdAt: -1 });
+
+    res.json(pets);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
