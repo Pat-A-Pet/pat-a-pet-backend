@@ -39,7 +39,7 @@ const petSchema = new mongoose.Schema(
           ref: "User",
           required: true,
         },
-        // channelId: String,
+        channelId: String,
         status: {
           type: String,
           enum: ["pending", "accepted", "rejected"],
