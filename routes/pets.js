@@ -4,6 +4,7 @@ import Pet from "../models/pet.js";
 import User from "../models/user.js";
 import multer from "multer";
 import cloudinary from "../configs/cloudinary.js";
+import mongoose from "mongoose";
 
 const router = Router();
 const upload = multer({
@@ -241,7 +242,7 @@ router.get("/get-listing/:id", async (req, res) => {
       .populate("owner", "fullname email")
       .populate("adoptedBy", "fullname profilePictureUrl")
       .populate("adoptionRequests.user", "fullname profilePictureUrl");
-    
+
     if (!pet) return res.status(404).json({ error: "Pet not found" });
 
     res.json({
@@ -253,10 +254,10 @@ router.get("/get-listing/:id", async (req, res) => {
 });
 
 // Get user's adoption posts (jangan dihapus juga bang XD)
-router.get('/my-adoptions/:userId', async (req, res) => {
+router.get("/my-adoptions/:userId", async (req, res) => {
   try {
     const pets = await Pet.find({ owner: req.params.userId })
-      .populate('owner', 'fullname email')
+      .populate("owner", "fullname email")
       .sort({ createdAt: -1 });
 
     res.json(pets);
@@ -394,46 +395,90 @@ router.patch(
 
       const newStatus = action === "approve" ? "accepted" : "rejected";
 
-      // Find the pet and request
-      const pet = await Pet.findById(petId);
-      if (!pet) {
-        return res.status(404).json({ message: "Pet not found" });
-      }
+      // Start a session for transaction
+      const session = await mongoose.startSession();
+      session.startTransaction();
 
-      // Find the request
-      const requestIndex = pet.adoptionRequests.findIndex(
-        (req) => req._id.toString() === requestId,
-      );
+      try {
+        // Find the pet and request
+        const pet = await Pet.findById(petId).session(session);
+        if (!pet) {
+          await session.abortTransaction();
+          return res.status(404).json({ message: "Pet not found" });
+        }
 
-      if (requestIndex === -1) {
-        return res.status(404).json({ message: "Request not found" });
-      }
+        // Find the request
+        const requestIndex = pet.adoptionRequests.findIndex(
+          (req) => req._id.toString() === requestId,
+        );
+        if (requestIndex === -1) {
+          await session.abortTransaction();
+          return res.status(404).json({ message: "Request not found" });
+        }
 
-      // Update status
-      pet.adoptionRequests[requestIndex].status = newStatus;
+        const request = pet.adoptionRequests[requestIndex];
+        const requesterId = request.user;
 
-      // If approving, reject all other pending requests
-      if (action === "approve") {
-        pet.adoptionRequests.forEach((req) => {
-          if (req.status === "pending" && req._id.toString() !== requestId) {
-            req.status = "rejected";
+        // Update status
+        pet.adoptionRequests[requestIndex].status = newStatus;
+
+        if (action === "approve") {
+          // If approving, we'll:
+          // 1. Reject all other pending requests
+          // 2. Clear all adoptionRequests
+          // 3. Set adoptedBy
+          // 4. Update user's adoptions
+
+          // 1. Reject all other pending requests
+          pet.adoptionRequests.forEach((req) => {
+            if (req.status === "pending" && req._id.toString() !== requestId) {
+              req.status = "rejected";
+            }
+          });
+
+          // 2. Move the approved request to user's adoptions
+          const requester = await User.findById(requesterId).session(session);
+          if (!requester) {
+            await session.abortTransaction();
+            return res.status(404).json({ message: "Requester not found" });
           }
+
+          // 3. Update pet status and adoptedBy
+          pet.adoptedBy = requesterId;
+          pet.status = "adopted";
+
+          // 4. Add pet to requester's adoptions (if not already there)
+          if (!requester.adoptions.includes(petId)) {
+            requester.adoptions.push(petId);
+            await requester.save({ session });
+          }
+
+          // 5. Clear all adoptionRequests (optional - you can keep them if you want history)
+          pet.adoptionRequests = [];
+        }
+
+        // Save the pet changes
+        await pet.save({ session });
+
+        // Commit the transaction
+        await session.commitTransaction();
+
+        // Get the updated pet with populated fields
+        const populatedPet = await Pet.findById(pet._id)
+          .populate("adoptedBy", "fullname profilePictureUrl")
+          .populate("owner", "fullname profilePictureUrl");
+
+        res.json({
+          message: `Request ${newStatus}`,
+          pet: populatedPet,
         });
-        pet.adoptedBy = pet.adoptionRequests[requestIndex].user;
-        pet.status = "adopted";
+      } catch (error) {
+        // If any error occurs, abort the transaction
+        await session.abortTransaction();
+        throw error;
+      } finally {
+        session.endSession();
       }
-
-      await pet.save();
-
-      // Then populate the adoptedBy field before sending response
-      const populatedPet = await Pet.findById(pet._id)
-        .populate("adoptedBy", "fullname profilePictureUrl")
-        .populate("adoptionRequests.user", "fullname profilePictureUrl");
-
-      res.json({
-        message: `Request ${newStatus}`,
-        pet: populatedPet,
-      });
     } catch (error) {
       console.error(error);
       res.status(500).json({ message: "Server error" });
