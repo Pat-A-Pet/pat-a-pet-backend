@@ -52,10 +52,10 @@ router.post("/signin", async (req, res) => {
 
     const payload = { sub: user._id };
     const token = jwt.sign(payload, process.env.JWT_SECRET, {
-      expiresIn: "3h",
+      expiresIn: "36",
     });
     const refreshToken = jwt.sign(payload, process.env.JWT_SECRET, {
-      expiresIn: "1d",
+      expiresIn: "7d",
     });
 
     const userResponse = user.toObject();
@@ -80,7 +80,7 @@ router.post("/refresh-token", (req, res) => {
     if (err) return res.status(403).json({ error: "Invalid refresh token" });
 
     const newToken = jwt.sign({ sub: decoded.sub }, process.env.JWT_SECRET, {
-      expiresIn: "3h",
+      expiresIn: "6h",
     });
 
     res.json({ token: newToken });
@@ -106,7 +106,7 @@ router.post("/forgot-password", async (req, res) => {
 
     // Generate temporary token
     const resetToken = jwt.sign({ sub: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "30m",
+      expiresIn: "1h",
     });
 
     res.json({
