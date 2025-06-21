@@ -321,34 +321,46 @@ router.post(
 
       // Check if pet is available
       if (pet.status !== "available") {
-        return res
-          .status(400)
-          .json({ message: "Pet is not available for adoption" });
+        return res.status(400).json({ message: "Pet is not available for adoption" });
+      }
+
+      // Check if user is the owner
+      if (pet.owner.toString() === req.user._id.toString()) {
+        return res.status(400).json({ message: "You cannot adopt your own pet" });
       }
 
       // Check if user already requested
       const existingRequest = pet.adoptionRequests.find(
-        (req) => req.user.toString() === req.body.userId,
+        (request) => request.user.toString() === req.user._id.toString()
       );
 
       if (existingRequest) {
-        return res
-          .status(400)
-          .json({ message: "You already requested to adopt this pet" });
+        return res.status(400).json({ message: "You already requested to adopt this pet" });
       }
 
-      // Add new request
-      pet.adoptionRequests.push({
-        user: req.body.userId,
+      // Create properly formatted adoption request
+      const newRequest = {
+        user: req.user._id,  // This should be a valid ObjectId
         status: "pending",
-      });
+        requestDate: new Date()
+      };
 
+      // Add new request
+      pet.adoptionRequests.push(newRequest);
       await pet.save();
-      res.status(201).json(pet);
+      
+      res.status(201).json({
+        message: "Adoption request sent successfully",
+        pet: pet
+      });
     } catch (error) {
-      res.status(500).json({ message: error.message });
+      console.error("Adoption request error:", error);
+      res.status(500).json({ 
+        message: "Failed to process adoption request",
+        error: error.message 
+      });
     }
-  },
+  }
 );
 
 // In your pet routes file
@@ -503,5 +515,30 @@ router.get(
     }
   },
 );
+
+router.get(
+  "/get-adoption-requests-for-owner/:userId",
+  passport.authenticate("jwt", { session: false }),
+  async (req, res) => {
+    try {
+      const { userId } = req.params;
+
+      // 1. Get all pets owned by this user that have at least 1 adoption request
+      const pets = await Pet.find({
+        owner: userId,
+        "adoptionRequests.0": { $exists: true },
+      })
+        .populate("adoptionRequests.user", "fullname profilePictureUrl")
+        .populate("adoptedBy", "fullname profilePictureUrl")
+        .sort({ updatedAt: -1 });
+
+      res.json(pets);
+    } catch (error) {
+      console.error("Error in /get-adoption-requests-for-owner:", error);
+      res.status(500).json({ message: error.message });
+    }
+  }
+);
+
 
 export default router;
