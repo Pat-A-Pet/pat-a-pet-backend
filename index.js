@@ -37,6 +37,10 @@ server.listen(PORT, "0.0.0.0", () => {
   console.log(`Server running on port ${PORT}`);
 });
 
+app.get("/", (req, res) => {
+  res.send("Hello frontend, here's backend");
+});
+
 app.use("/api/auth", authRoutes);
 app.use("/api/chat/", chatRoutes);
 app.use("/api/pets/", petsRoutes);
