@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node index.js"
+    "dev": "node index.js",
+    "start": "node app.cjs",
+    "build": "echo \"Building...\" && exit 0"
   },
   "author": "",
   "license": "ISC",
