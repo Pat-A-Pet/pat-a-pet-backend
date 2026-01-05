@@ -14,16 +14,29 @@ import fakeDoorRoutes from "./routes/fakeDoor.js";
 const PORT = process.env.PORT;
 const app = express();
 
+const allowedOrigins = [
+  "https://pat-a-pet-web-git-fakedoor-ananda-arti-widigdos-projects.vercel.app",
+  "http://localhost:5173", // for local dev
+];
+
+const corsOptions = {
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true,
+};
+
 app.use(json());
-app.use(
-  cors({
-    // origin: ["http://10.0.2.2:5000/api", "http://localhost:3000/api"],
-    origin: "*",
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true,
-  }),
-);
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 
 app.use(passport.initialize());
 
