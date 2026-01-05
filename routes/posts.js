@@ -202,23 +202,23 @@ router.patch(
   },
 );
 
-// Get post by ID
-router.get(
-  "/get-posts/:id",
-  passport.authenticate("jwt", { session: false }),
-  async (req, res) => {
-    try {
-      const post = await Post.findById(req.params.id)
-        .populate("author", "fullname profilePictureUrl")
-        .populate("comments.author", "fullname profilePictureUrl");
-
-      if (!post) return res.status(404).json({ error: "Post not found" });
-      res.json(post);
-    } catch (err) {
-      res.status(500).json({ error: err.message });
-    }
-  },
-);
+// // Get post by ID
+// router.get(
+//   "/get-posts/:id",
+//   passport.authenticate("jwt", { session: false }),
+//   async (req, res) => {
+//     try {
+//       const post = await Post.findById(req.params.id)
+//         .populate("author", "fullname profilePictureUrl")
+//         .populate("comments.author", "fullname profilePictureUrl");
+//
+//       if (!post) return res.status(404).json({ error: "Post not found" });
+//       res.json(post);
+//     } catch (err) {
+//       res.status(500).json({ error: err.message });
+//     }
+//   },
+// );
 
 // Get post by ID
 router.get(

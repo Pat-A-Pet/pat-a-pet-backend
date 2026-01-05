@@ -23,15 +23,17 @@ app.use(
 
 app.use(passport.initialize());
 
-connect(process.env.MONGO_URI)
-  .then(() =>
-    console.log("MongoDB Connected on database:", mongoose.connection.name),
-  )
-  .catch((err) => console.error("MongoDB Connection Error:", err));
+await connectDB(process.env.MONGO_URI);
 
-app.listen(PORT, "0.0.0.0", () => {
-  console.log(`Server running on port ${PORT}`);
-});
+// connect(process.env.MONGO_URI)
+//   .then(() =>
+//     console.log("MongoDB Connected on database:", mongoose.connection.name),
+//   )
+//   .catch((err) => console.error("MongoDB Connection Error:", err));
+
+// app.listen(PORT, "0.0.0.0", () => {
+//   console.log(`Server running on port ${PORT}`);
+// });
 
 app.get("/", (req, res) => {
   res.send("Hello frontend, here's backend");
