@@ -21,12 +21,13 @@ app.use(
     origin: "*",
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
   }),
 );
 
 app.use(passport.initialize());
 
-const server = http.createServer(app);
+// const server = http.createServer(app);
 
 connect(process.env.MONGO_URI)
   .then(() =>
@@ -34,9 +35,9 @@ connect(process.env.MONGO_URI)
   )
   .catch((err) => console.error("MongoDB Connection Error:", err));
 
-server.listen(PORT, "0.0.0.0", () => {
-  console.log(`Server running on port ${PORT}`);
-});
+// server.listen(PORT, "0.0.0.0", () => {
+//   console.log(`Server running on port ${PORT}`);
+// });
 
 app.get("/", (req, res) => {
   res.send("Hello frontend, here's backend");
