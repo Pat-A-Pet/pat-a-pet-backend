@@ -27,15 +27,16 @@ app.use(
 app.use(json());
 app.use(passport.initialize());
 
-app.options("*", (req, res) => {
-  res.setHeader("Access-Control-Allow-Origin", "*");
+if (req.method === "OPTIONS") {
+  // Handle the preflight request
+  res.setHeader("Access-Control-Allow-Origin", "*"); // Allow all origins or specify specific origins
   res.setHeader(
     "Access-Control-Allow-Methods",
-    "GET, POST, PUT, DELETE, PATCH, OPTIONS",
+    "GET, POST, PUT, DELETE, OPTIONS",
   );
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  res.status(200).end();
-});
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization"); // Allow specific headers
+  res.status(200).end(); // Respond with 200 OK and terminate the response
+}
 
 const server = http.createServer(app);
 
@@ -51,6 +52,22 @@ server.listen(PORT, "0.0.0.0", () => {
 
 app.get("/", (req, res) => {
   res.send("Hello frontend, here's backend");
+});
+
+// Add this right after app.use(cors(...))
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept, Authorization",
+  );
+  res.header(
+    "Access-Control-Allow-Methods",
+    "GET, POST, PUT, DELETE, PATCH, OPTIONS",
+  );
+
+  next();
 });
 
 app.use("/api/auth", authRoutes);
