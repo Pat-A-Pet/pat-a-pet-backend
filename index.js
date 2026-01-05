@@ -27,6 +27,16 @@ app.use(
 app.use(json());
 app.use(passport.initialize());
 
+app.options("*", (req, res) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET, POST, PUT, DELETE, PATCH, OPTIONS",
+  );
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.status(200).end();
+});
+
 const server = http.createServer(app);
 
 connect(process.env.MONGO_URI)
@@ -41,22 +51,6 @@ server.listen(PORT, "0.0.0.0", () => {
 
 app.get("/", (req, res) => {
   res.send("Hello frontend, here's backend");
-});
-
-// Add this right after app.use(cors(...))
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Credentials", "true");
-  res.header(
-    "Access-Control-Allow-Headers",
-    "Origin, X-Requested-With, Content-Type, Accept, Authorization",
-  );
-  res.header(
-    "Access-Control-Allow-Methods",
-    "GET, POST, PUT, DELETE, PATCH, OPTIONS",
-  );
-
-  next();
 });
 
 app.use("/api/auth", authRoutes);
