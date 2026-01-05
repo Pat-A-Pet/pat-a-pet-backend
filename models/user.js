@@ -24,20 +24,20 @@ const UserSchema = new mongoose.Schema(
       required: true,
       select: false,
     },
-    profilePictureUrl: {
-      type: String,
-      default: "",
-      ref: "ProfilePicture",
-    },
-    phoneNumber: {
-      type: String,
-      validate: {
-        validator: function (value) {
-          return /^\+?[0-9]{7,15}$/.test(value);
-        },
-        message: "Please use a valid phone number",
-      },
-    },
+    // profilePictureUrl: {
+    //   type: String,
+    //   default: "",
+    //   ref: "ProfilePicture",
+    // },
+    // phoneNumber: {
+    //   type: String,
+    //   validate: {
+    //     validator: function (value) {
+    //       return /^\+?[0-9]{7,15}$/.test(value);
+    //     },
+    //     message: "Please use a valid phone number",
+    //   },
+    // },
     adoptions: [
       {
         type: mongoose.Schema.Types.ObjectId,

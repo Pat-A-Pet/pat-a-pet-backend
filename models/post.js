@@ -26,7 +26,7 @@ const postSchema = new mongoose.Schema(
       type: [String],
       validate: {
         validator: function (v) {
-          return v.length > 0 || this.videoUrls.length > 0;
+          return v.length > 0;
         },
         message: "A post must have at least one image or video.",
       },
