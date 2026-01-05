@@ -1,45 +1,22 @@
-import "dotenv/config";
-import express, { json } from "express";
-import mongoose, { connect } from "mongoose";
-import cors from "cors";
-import passport from "./configs/passport.js";
-import authRoutes from "./routes/auth.js";
-import chatRoutes from "./routes/chat.js";
-import petsRoutes from "./routes/pets.js";
-import postsRoutes from "./routes/posts.js";
+import dotenv from "dotenv";
+import connectDB from "./configs/db.js";
+import app from "./configs/express.js";
+import routes from "./routes/index.js";
 
-const PORT = process.env.PORT;
-const app = express();
+dotenv.config();
 
-app.use(json());
-app.use(
-  cors({
-    // origin: ["http://10.0.2.2:5000/api", "http://localhost:3000/api"],
-    origin: "*",
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  }),
-);
+const startServer = async () => {
+  await connectDB();
 
-app.use(passport.initialize());
+  app.use("/api", routes);
 
-connect(process.env.MONGO_URI)
-  .then(() =>
-    console.log("MongoDB Connected on database:", mongoose.connection.name),
-  )
-  .catch((err) => console.error("MongoDB Connection Error:", err));
+  const PORT = process.env.PORT || 5001;
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+};
 
-app.listen(PORT, "0.0.0.0", () => {
-  console.log(`Server running on port ${PORT}`);
+startServer().catch((error) => {
+  console.error("Failed to start server:", error);
+  process.exit(1);
 });
-
-app.get("/", (req, res) => {
-  res.send("Hello frontend, here's backend");
-});
-
-app.use("/api/auth", authRoutes);
-app.use("/api/chat/", chatRoutes);
-app.use("/api/pets/", petsRoutes);
-app.use("/api/posts/", postsRoutes);
-
-export default app;
