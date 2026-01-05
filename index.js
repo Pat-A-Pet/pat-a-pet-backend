@@ -11,6 +11,7 @@ const startServer = async () => {
   app.use("/api", routes);
 
   const PORT = process.env.PORT || 5001;
+  // swaggerDocs(app, PORT);
   app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
   });
