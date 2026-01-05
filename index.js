@@ -36,7 +36,6 @@ const corsOptions = {
 
 app.use(json());
 app.use(cors(corsOptions));
-app.options("*", cors(corsOptions));
 
 app.use(passport.initialize());
 
