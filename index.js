@@ -48,3 +48,5 @@ app.use("/api/chat/", chatRoutes);
 app.use("/api/pets/", petsRoutes);
 app.use("/api/posts/", postsRoutes);
 app.use("/api/fake-door/", fakeDoorRoutes);
+
+export default app;
