@@ -9,7 +9,7 @@ import authRoutes from "./routes/auth.js";
 import chatRoutes from "./routes/chat.js";
 import petsRoutes from "./routes/pets.js";
 import postsRoutes from "./routes/posts.js";
-import fakeDoorRoutes from "./rotes/fakeDoor.js";
+import fakeDoorRoutes from "./routes/fakeDoor.js";
 
 const PORT = process.env.PORT;
 const app = express();
