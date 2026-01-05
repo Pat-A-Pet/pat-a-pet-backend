@@ -48,18 +48,18 @@ connect(process.env.MONGO_URI)
   )
   .catch((err) => console.error("MongoDB Connection Error:", err));
 
-// server.listen(PORT, "0.0.0.0", () => {
-//   console.log(`Server running on port ${PORT}`);
-// });
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
 
 app.get("/", (req, res) => {
   res.send("Hello frontend, here's backend");
 });
 
 app.use("/api/auth", authRoutes);
-app.use("/api/chat/", chatRoutes);
-app.use("/api/pets/", petsRoutes);
-app.use("/api/posts/", postsRoutes);
-app.use("/api/fake-door/", fakeDoorRoutes);
+app.use("/api/chat", chatRoutes);
+app.use("/api/pets", petsRoutes);
+app.use("/api/posts", postsRoutes);
+app.use("/api/fake-door", fakeDoorRoutes);
 
 export default app;
