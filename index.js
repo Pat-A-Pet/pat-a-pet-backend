@@ -23,26 +23,23 @@ app.use(
 
 app.use(passport.initialize());
 
-await connectDB(process.env.MONGO_URI);
+connect(process.env.MONGO_URI)
+  .then(() =>
+    console.log("MongoDB Connected on database:", mongoose.connection.name),
+  )
+  .catch((err) => console.error("MongoDB Connection Error:", err));
 
-// connect(process.env.MONGO_URI)
-//   .then(() =>
-//     console.log("MongoDB Connected on database:", mongoose.connection.name),
-//   )
-//   .catch((err) => console.error("MongoDB Connection Error:", err));
-
-// app.listen(PORT, "0.0.0.0", () => {
-//   console.log(`Server running on port ${PORT}`);
-// });
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Server running on port ${PORT}`);
+});
 
 app.get("/", (req, res) => {
   res.send("Hello frontend, here's backend");
 });
 
 app.use("/api/auth", authRoutes);
-app.use("/api/chat", chatRoutes);
-app.use("/api/pets", petsRoutes);
-app.use("/api/posts", postsRoutes);
-app.use("/api/fake-door", postsRoutes);
+app.use("/api/chat/", chatRoutes);
+app.use("/api/pets/", petsRoutes);
+app.use("/api/posts/", postsRoutes);
 
 export default app;
