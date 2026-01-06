@@ -2,7 +2,6 @@ import "dotenv/config";
 import express, { json } from "express";
 import mongoose, { connect } from "mongoose";
 import cors from "cors";
-import { corsMiddleware } from "./middleware.js";
 import passport from "passport";
 import "./configs/passport.js";
 import http from "http";
