@@ -14,23 +14,22 @@ dotenv.config();
 const PORT = process.env.PORT || 5000;
 const app = express();
 
-const allowedOrigins = [
-  "https://pat-a-pet-web-git-fakedoor-ananda-arti-widigdos-projects.vercel.app",
-  "http://localhost:3000",
-  "http://localhost:5173",
-];
+const allowedOrigins = ["*"];
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      // allow server-to-server, Postman, mobile apps
+      // Allow server-to-server or tools like Postman
       if (!origin) return callback(null, true);
 
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
+      const isAllowed =
+        allowedOrigins.includes(origin) || origin.endsWith(".vercel.app"); // Trust all vercel previews for now
 
-      return callback(new Error(`CORS blocked origin: ${origin}`));
+      if (isAllowed) {
+        callback(null, true);
+      } else {
+        callback(new Error(`CORS blocked origin: ${origin}`));
+      }
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
@@ -83,19 +82,22 @@ app.use((req, res) => {
 
 // 12. Error handling middleware
 app.use((err, req, res, next) => {
-  console.error("Server Error:", err.stack);
-
-  // Handle CORS errors
-  if (err.message.includes("CORS")) {
-    return res.status(403).json({
-      error: "CORS Error",
-      message: err.message,
-    });
+  // Ensure CORS headers are present even on error responses
+  const origin = req.headers.origin;
+  if (
+    allowedOrigins.includes(origin) ||
+    (origin && origin.endsWith(".vercel.app"))
+  ) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Access-Control-Allow-Credentials", "true");
   }
 
-  res.status(500).json({
-    error: "Internal Server Error",
-    message: process.env.NODE_ENV === "development" ? err.message : undefined,
+  console.error("Server Error:", err.stack);
+
+  const status = err.name === "UnauthorizedError" ? 401 : 500;
+  res.status(err.status || status).json({
+    error: err.name || "Internal Server Error",
+    message: err.message,
   });
 });
 

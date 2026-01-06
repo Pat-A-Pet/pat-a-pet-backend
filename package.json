@@ -2,11 +2,10 @@
   "name": "pet_a_pet-backend",
   "version": "1.0.0",
   "main": "index.js",
-  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "node index.js",
-    "start": "node app.cjs",
+    "dev": "nodemon index.js",
+    "start": "nodeindex.js",
     "build": "echo \"Building...\" && exit 0"
   },
   "author": "",
