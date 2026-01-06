@@ -15,17 +15,15 @@ import fakeDoorRoutes from "./routes/fakeDoor.js";
 const PORT = process.env.PORT;
 const app = express();
 
-app.use(corsMiddleware);
-
-// app.use(
-//   cors({
-//     // origin: ["http://10.0.2.2:5000/api", "http://localhost:3000/api"],
-//     origin: "*",
-//     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
-//     allowedHeaders: ["Content-Type", "Authorization"],
-//     credentials: true,
-//   }),
-// );
+app.use(
+  cors({
+    // origin: ["http://10.0.2.2:5000/api", "http://localhost:3000/api"],
+    origin: "*",
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+  }),
+);
 
 app.use(json());
 app.use(passport.initialize());
