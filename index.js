@@ -1,15 +1,15 @@
-import "dotenv/config";
+import dotenv from "dotenv";
 import express, { json } from "express";
 import mongoose, { connect } from "mongoose";
 import cors from "cors";
-import passport from "passport";
-import "./configs/passport.js";
-import http from "http";
+import passport from "./configs/passport.js";
 import authRoutes from "./routes/auth.js";
 import chatRoutes from "./routes/chat.js";
 import petsRoutes from "./routes/pets.js";
 import postsRoutes from "./routes/posts.js";
 import fakeDoorRoutes from "./routes/fakeDoor.js";
+
+dotenv.config();
 
 const PORT = process.env.PORT;
 const app = express();
