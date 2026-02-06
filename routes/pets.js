@@ -21,6 +21,56 @@ const upload = multer({
   },
 });
 
+// router.get("/recommendations", passport.authenticate("jwt", { session: false }), async (req, res) => {
+//   try {
+//     const userId = req.user._id;
+//
+//     // 1. Find all pets this user has "loved"
+//     const lovedPets = await Pet.find({ loves: userId });
+//
+//     if (lovedPets.length === 0) {
+//       // Fallback: If no likes, return newest available pets
+//       const genericPets = await Pet.find({ status: "available" }).sort({ createdAt: -1 }).limit(10);
+//       return res.json(genericPets);
+//     }
+//
+//     // 2. Extract preferences (Counting occurrences)
+//     const preferences = {
+//       species: {},
+//       breeds: {},
+//       locations: {}
+//     };
+//
+//     lovedPets.forEach(pet => {
+//       preferences.species[pet.species] = (preferences.species[pet.species] || 0) + 1;
+//       preferences.breed[pet.breed] = (preferences.breed[pet.breed] || 0) + 1;
+//       preferences.locations[pet.location] = (preferences.locations[pet.location] || 0) + 1;
+//     });
+//
+//     // 3. Find the "Top" preferences
+//     const topSpecies = Object.keys(preferences.species).sort((a, b) => preferences.species[b] - preferences.species[a])[0];
+//     const topBreed = Object.keys(preferences.breed).sort((a, b) => preferences.breed[b] - preferences.breed[a])[0];
+//
+//     // 4. Query for similar pets using MongoDB's $or for "fuzzy" matching
+//     // We want pets that are NOT the ones they already liked
+//     const recommendations = await Pet.find({
+//       _id: { $nin: lovedPets.map(p => p._id) }, // Exclude already liked
+//       status: "available",
+//       $or: [
+//         { species: topSpecies },
+//         { breed: topBreed },
+//         { location: { $in: Object.keys(preferences.locations) } }
+//       ]
+//     })
+//       .limit(10)
+//       .sort({ createdAt: -1 });
+//
+//     res.json(recommendations);
+//   } catch (err) {
+//     res.status(500).json({ error: err.message });
+//   }
+// });
+
 router.post(
   "/upload-pet-images",
   passport.authenticate("jwt", { session: false }),
@@ -52,6 +102,7 @@ router.post(
                   original_filename: file.originalname,
                   width: result.width,
                   height: result.height,
+                  // type: result.resource_type,
                 });
               }
             },
@@ -321,46 +372,52 @@ router.post(
 
       // Check if pet is available
       if (pet.status !== "available") {
-        return res.status(400).json({ message: "Pet is not available for adoption" });
+        return res
+          .status(400)
+          .json({ message: "Pet is not available for adoption" });
       }
 
       // Check if user is the owner
       if (pet.owner.toString() === req.user._id.toString()) {
-        return res.status(400).json({ message: "You cannot adopt your own pet" });
+        return res
+          .status(400)
+          .json({ message: "You cannot adopt your own pet" });
       }
 
       // Check if user already requested
       const existingRequest = pet.adoptionRequests.find(
-        (request) => request.user.toString() === req.user._id.toString()
+        (request) => request.user.toString() === req.user._id.toString(),
       );
 
       if (existingRequest) {
-        return res.status(400).json({ message: "You already requested to adopt this pet" });
+        return res
+          .status(400)
+          .json({ message: "You already requested to adopt this pet" });
       }
 
       // Create properly formatted adoption request
       const newRequest = {
-        user: req.user._id,  // This should be a valid ObjectId
+        user: req.user._id, // This should be a valid ObjectId
         status: "pending",
-        requestDate: new Date()
+        requestDate: new Date(),
       };
 
       // Add new request
       pet.adoptionRequests.push(newRequest);
       await pet.save();
-      
+
       res.status(201).json({
         message: "Adoption request sent successfully",
-        pet: pet
+        pet: pet,
       });
     } catch (error) {
       console.error("Adoption request error:", error);
-      res.status(500).json({ 
+      res.status(500).json({
         message: "Failed to process adoption request",
-        error: error.message 
+        error: error.message,
       });
     }
-  }
+  },
 );
 
 // In your pet routes file
@@ -537,8 +594,7 @@ router.get(
       console.error("Error in /get-adoption-requests-for-owner:", error);
       res.status(500).json({ message: error.message });
     }
-  }
+  },
 );
-
 
 export default router;

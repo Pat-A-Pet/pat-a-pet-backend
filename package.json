@@ -1,17 +1,15 @@
 {
   "name": "pet_a_pet-backend",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "main": "index.js",
-  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "node index.js",
-    "start": "node app.cjs",
-    "build": "echo \"Building...\" && exit 0"
+    "start": "node app.cjs"
   },
-  "author": "",
+  "author": "ananda17gb",
   "license": "ISC",
-  "description": "",
+  "description": "backend for pet a pet website and android app",
   "dependencies": {
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.2",

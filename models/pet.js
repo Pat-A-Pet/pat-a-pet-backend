@@ -19,6 +19,7 @@ const petSchema = new mongoose.Schema(
     specialNeeds: { type: String },
     description: { type: String, required: true },
     imageUrls: { type: [String], required: true },
+    // videoUrls: { type: [String], default: [] },
     location: { type: String, required: true },
     owner: {
       type: mongoose.Schema.Types.ObjectId,

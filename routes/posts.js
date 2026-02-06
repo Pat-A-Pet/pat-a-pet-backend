@@ -8,7 +8,7 @@ const router = Router();
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB limit
+    fileSize: 10 * 1024 * 1024,
   },
   fileFilter: (req, file, cb) => {
     if (file.mimetype.startsWith("image/")) {
@@ -18,6 +18,41 @@ const upload = multer({
     }
   },
 });
+
+// router.get(
+//   "/suggested-posts",
+//   passport.authenticate("jwt", { session: false }),
+//   async (req, res) => {
+//     try {
+//       const lovedPosts = await Post.find({ loves: req.user._id });
+//
+//       // Extract keywords from captions (remove common stop words like 'the', 'is', etc.)
+//       const stopWords = ["the", "this", "and", "with", "your", "from"];
+//       let keywords = lovedPosts.flatMap((p) =>
+//         p.captions
+//           .toLowerCase()
+//           .split(/\W+/)
+//           .filter((word) => word.length > 3 && !stopWords.includes(word)),
+//       );
+//
+//       // Get unique keywords
+//       const uniqueKeywords = [...new Set(keywords)].slice(0, 10);
+//
+//       // Find posts containing these keywords using Regex
+//       const suggested = await Post.find({
+//         _id: { $nin: lovedPosts.map((p) => p._id) },
+//         captions: { $regex: uniqueKeywords.join("|"), $options: "i" },
+//       })
+//         .populate("author", "fullname profilePictureUrl")
+//         .limit(10);
+//
+//       res.json(suggested);
+//     } catch (err) {
+//       res.status(500).json({ error: err.message });
+//     }
+//   },
+// );
+//
 
 // Create a new post
 router.post(
@@ -57,11 +92,21 @@ router.post(
       // Get secure URLs from Cloudinary
       const imageUrls = cloudinaryResults.map((result) => result.secure_url);
 
+      // // Sort results into images and videos
+      // // Get secure URLs from Cloudinary
+      // const imageUrls = cloudinaryResults
+      //   .filter((r) => r.resource_type === "image")
+      //   .map((r) => r.secure_url);
+      // const videoUrls = cloudinaryResults
+      //   .filter((r) => r.resource_type === "video")
+      //   .map((r) => r.secure_url);
+
       // Create post with Cloudinary URLs
       const post = new Post({
         captions: req.body.captions,
         author: req.user._id,
-        imageUrls: imageUrls,
+        imageUrls,
+        // videoUrls,
       });
 
       await post.save();
@@ -202,23 +247,23 @@ router.patch(
   },
 );
 
-// Get post by ID
-router.get(
-  "/get-posts/:id",
-  passport.authenticate("jwt", { session: false }),
-  async (req, res) => {
-    try {
-      const post = await Post.findById(req.params.id)
-        .populate("author", "fullname profilePictureUrl")
-        .populate("comments.author", "fullname profilePictureUrl");
-
-      if (!post) return res.status(404).json({ error: "Post not found" });
-      res.json(post);
-    } catch (err) {
-      res.status(500).json({ error: err.message });
-    }
-  },
-);
+// // Get post by ID
+// router.get(
+//   "/get-posts/:id",
+//   passport.authenticate("jwt", { session: false }),
+//   async (req, res) => {
+//     try {
+//       const post = await Post.findById(req.params.id)
+//         .populate("author", "fullname profilePictureUrl")
+//         .populate("comments.author", "fullname profilePictureUrl");
+//
+//       if (!post) return res.status(404).json({ error: "Post not found" });
+//       res.json(post);
+//     } catch (err) {
+//       res.status(500).json({ error: err.message });
+//     }
+//   },
+// );
 
 // Get post by ID
 router.get(
