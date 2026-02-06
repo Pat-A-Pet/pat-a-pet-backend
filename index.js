@@ -1,4 +1,4 @@
-import "dotenv/config";
+import dotenv from "dotenv";
 import express, { json } from "express";
 import mongoose, { connect } from "mongoose";
 import cors from "cors";
